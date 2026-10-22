@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Admin Panel</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f7f4ef; display: flex; justify-content: center; padding: 40px 15px; }
+  .box { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 100%; max-width: 420px; border: 1px solid #e5dcd0; }
+  h2 { font-size: 20px; color: #5c3e10; text-align: center; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: #665235; margin-bottom: 4px; }
+  input { width: 100%; padding: 10px; border: 1px solid #d8b98a; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+  button { width: 100%; padding: 12px; background: #b98b4e; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+  button:hover { background: #8c6a32; }
+  .logout { background: #b04444; margin-top: 8px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <!-- GİRİŞ FORMU -->
+  <div id="login-box">
+    <h2>Admin Girişi</h2>
+    <form id="login-form">
+      <div class="field"><label>E-poçt</label><input type="email" id="email" required></div>
+      <div class="field"><label>Şifrə</label><input type="password" id="password" required></div>
+      <button type="submit">Daxil ol</button>
+    </form>
+  </div>
+
+  <!-- İDARƏETMƏ FORMU -->
+  <div id="admin-box" class="hidden">
+    <h2>Dəvətnamə Məlumatları</h2>
+    <form id="save-form">
+      <div class="field"><label>Bəyin Adı</label><input type="text" id="groomName"></div>
+      <div class="field"><label>Gəlinin Adı</label><input type="text" id="brideName"></div>
+      <div class="field"><label>Toy Tarixi və Saatı</label><input type="datetime-local" id="weddingDate"></div>
+      <div class="field"><label>Ekranda Görünən Saat</label><input type="text" id="time" placeholder="19:00"></div>
+      <div class="field"><label>Məkan</label><input type="text" id="location" placeholder="Bakı"></div>
+      <div class="field"><label>WhatsApp Nömrəsi</label><input type="text" id="whatsapp" placeholder="994556519390"></div>
+      <button type="submit">Yadda saxla</button>
+    </form>
+    <button id="logout-btn" class="logout">Çıxış et</button>
+  </div>
+</div>
+
+<script type="module">
+  import { 
+    auth, db, 
+    signInWithEmailAndPassword, 
+    onAuthStateChanged, 
+    signOut, 
+    doc, getDoc, setDoc 
+  } from "./firebase.js";
+
+  const docRef = doc(db, "invitation", "main");
+
+  // Auth state check
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      document.getElementById("login-box").classList.add("hidden");
+      document.getElementById("admin-box").classList.remove("hidden");
+      
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const d = snap.data();
+        document.getElementById("groomName").value = d.groomName || "";
+        document.getElementById("brideName").value = d.brideName || "";
+        document.getElementById("weddingDate").value = d.weddingDate || "";
+        document.getElementById("time").value = d.time || "";
+        document.getElementById("location").value = d.location || "";
+        document.getElementById("whatsapp").value = d.whatsapp || "";
+      }
+    } else {
+      document.getElementById("login-box").classList.remove("hidden");
+      document.getElementById("admin-box").classList.add("hidden");
+    }
+  });
+
+  // Login
+  document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value);
+    } catch(err) {
+      alert("Giriş xətası: " + err.message);
+    }
+  });
+
+  // Save
+  document.getElementById("save-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await setDoc(docRef, {
+        groomName: document.getElementById("groomName").value,
+        brideName: document.getElementById("brideName").value,
+        weddingDate: document.getElementById("weddingDate").value,
+        time: document.getElementById("time").value,
+        location: document.getElementById("location").value,
+        whatsapp: document.getElementById("whatsapp").value
+      }, { merge: true });
+      alert("Məlumatlar uğurla saxlanıldı!");
+    } catch(err) {
+      alert("Xəta baş verdi: " + err.message);
+    }
+  });
+
+  // Logout
+  document.getElementById("logout-btn").addEventListener("click", () => signOut(auth));
+</script>
+</body>
+</html>

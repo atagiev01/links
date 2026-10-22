@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "javascript-obfuscator": "^5.6.0"
+  },
+  "dependencies": {
+    "@dataconnect/generated": "file:src/dataconnect-generated",
+    "firebase": "^12.18.0"
+  }
+}
